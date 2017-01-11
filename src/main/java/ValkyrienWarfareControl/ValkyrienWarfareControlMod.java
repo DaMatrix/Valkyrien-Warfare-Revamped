@@ -9,16 +9,19 @@ import ValkyrienWarfareControl.Block.BlockDopedEtherium;
 import ValkyrienWarfareControl.Block.BlockHovercraftController;
 import ValkyrienWarfareControl.Block.BlockNormalEngine;
 import ValkyrienWarfareControl.Block.BlockRedstoneEngine;
-import ValkyrienWarfareControl.FullBalloonControl.ManualShipControllerBlock;
-import ValkyrienWarfareControl.FullBalloonControl.ManualShipControllerTileEntity;
+import ValkyrienWarfareControl.FullBalloonControl.BlockShipPilotsChair;
+import ValkyrienWarfareControl.FullBalloonControl.PilotsChairTileEntity;
 import ValkyrienWarfareControl.GUI.ControlGUIHandler;
 import ValkyrienWarfareControl.Item.ItemSystemLinker;
 import ValkyrienWarfareControl.Network.EntityFixMessage;
 import ValkyrienWarfareControl.Network.EntityFixMessageHandler;
 import ValkyrienWarfareControl.Network.HovercraftControllerGUIInputHandler;
 import ValkyrienWarfareControl.Network.HovercraftControllerGUIInputMessage;
-import ValkyrienWarfareControl.Network.PilotControlsMessage;
-import ValkyrienWarfareControl.Network.PilotControlsMessageHandler;
+import ValkyrienWarfareControl.Piloting.PilotControlsMessage;
+import ValkyrienWarfareControl.Piloting.PilotControlsMessageHandler;
+import ValkyrienWarfareControl.Piloting.SetShipPilotMessage;
+import ValkyrienWarfareControl.Piloting.SetShipPilotMessageHandler;
+import ValkyrienWarfareControl.Proxy.CommonProxyControl;
 import ValkyrienWarfareControl.TileEntity.AntiGravEngineTileEntity;
 import ValkyrienWarfareControl.TileEntity.BalloonBurnerTileEntity;
 import ValkyrienWarfareControl.TileEntity.TileEntityHoverController;
@@ -67,17 +70,17 @@ public class ValkyrienWarfareControlMod {
 	public Block antigravityEngine;
 	public Block dopedEtherium;
 	public Block balloonBurner;
-	public Block manualController;
+	public Block pilotsChair;
 
 	public Item systemLinker;
 
-	@SidedProxy(clientSide = "ValkyrienWarfareControl.ClientProxyControl", serverSide = "ValkyrienWarfareControl.CommonProxyControl")
+	@SidedProxy(clientSide = "ValkyrienWarfareControl.Proxy.ClientProxyControl", serverSide = "ValkyrienWarfareControl.Proxy.CommonProxyControl")
 	public static CommonProxyControl proxy;
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		instance = this;
-		config = new Configuration(new File(Minecraft.getMinecraft().mcDataDir + "/valkyrienwarfarecontrol.cfg"));
+		config = new Configuration(new File(ValkyrienWarfareMod.getWorkingFolder() + "/config/valkyrienwarfarecontrol.cfg"));
 		config.load();
 		registerBlocks(event);
 		registerTileEntities(event);
@@ -116,7 +119,7 @@ public class ValkyrienWarfareControlMod {
 		antigravityEngine = new BlockAntiGravEngine(Material.IRON).setHardness(8f).setUnlocalizedName("antigravengine").setUnlocalizedName("antigravengine").setRegistryName(ValkyrienWarfareMod.MODID, "antigravengine").setCreativeTab(CreativeTabs.TRANSPORTATION);
 		dopedEtherium = new BlockDopedEtherium(Material.GLASS).setHardness(4f).setUnlocalizedName("dopedetherium").setRegistryName(MODID, "dopedetherium").setCreativeTab(CreativeTabs.TRANSPORTATION);
 		balloonBurner = new BlockBalloonBurner(Material.IRON).setHardness(4f).setUnlocalizedName("ballonburner").setRegistryName(MODID, "ballonburner").setCreativeTab(CreativeTabs.TRANSPORTATION);
-		manualController = new ManualShipControllerBlock(Material.IRON).setHardness(4f).setUnlocalizedName("manualshipcontroller").setRegistryName(MODID, "manualshipcontroller").setCreativeTab(CreativeTabs.TRANSPORTATION);
+		pilotsChair = new BlockShipPilotsChair(Material.IRON).setHardness(4f).setUnlocalizedName("shippilotschair").setRegistryName(MODID, "shippilotschair").setCreativeTab(CreativeTabs.TRANSPORTATION);
 
 		GameRegistry.registerBlock(basicEngine);
 		GameRegistry.registerBlock(advancedEngine);
@@ -128,14 +131,14 @@ public class ValkyrienWarfareControlMod {
 		GameRegistry.registerBlock(antigravityEngine);
 		GameRegistry.registerBlock(dopedEtherium);
 		GameRegistry.registerBlock(balloonBurner);
-		GameRegistry.registerBlock(manualController);
+		GameRegistry.registerBlock(pilotsChair);
 	}
 
 	private void registerTileEntities(FMLStateEvent event) {
 		TileEntity.addMapping(TileEntityHoverController.class, "tilehovercontroller");
 		TileEntity.addMapping(AntiGravEngineTileEntity.class, "tileantigravengine");
 		TileEntity.addMapping(BalloonBurnerTileEntity.class, "tileballoonburner");
-		TileEntity.addMapping(ManualShipControllerTileEntity.class, "tilemanualshipcontroller");
+		TileEntity.addMapping(PilotsChairTileEntity.class, "tilemanualshipcontroller");
 	}
 
 	private void registerItems(FMLStateEvent event) {
@@ -156,5 +159,6 @@ public class ValkyrienWarfareControlMod {
 		controlNetwork.registerMessage(HovercraftControllerGUIInputHandler.class, HovercraftControllerGUIInputMessage.class, 0, Side.SERVER);
 		controlNetwork.registerMessage(PilotControlsMessageHandler.class, PilotControlsMessage.class, 1, Side.SERVER);
 		controlNetwork.registerMessage(EntityFixMessageHandler.class, EntityFixMessage.class, 2, Side.CLIENT);
+		controlNetwork.registerMessage(SetShipPilotMessageHandler.class, SetShipPilotMessage.class, 3, Side.CLIENT);
 	}
 }

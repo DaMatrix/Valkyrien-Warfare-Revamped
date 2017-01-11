@@ -3,6 +3,7 @@ package ValkyrienWarfareBase;
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 import ValkyrienWarfareBase.API.DataTag;
 import ValkyrienWarfareBase.API.ValkyrienWarfareHooks;
@@ -17,6 +18,7 @@ import ValkyrienWarfareBase.PhysicsManagement.Network.PhysWrapperPositionMessage
 import ValkyrienWarfareBase.Proxy.CommonProxy;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -26,6 +28,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -86,6 +89,7 @@ public class ValkyrienWarfareMod {
 	public static ExecutorService MultiThreadExecutor;
 
 	public DataTag tag = null;
+	public static Logger VWLogger;
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
@@ -97,6 +101,7 @@ public class ValkyrienWarfareMod {
 		runConfiguration(event);
 		ValkyrienWarfareHooks.methods = new RealMethods();
 		ValkyrienWarfareHooks.isValkyrienWarfareInstalled = true;
+		VWLogger = Logger.getLogger("ValkyrienWarfare");
 	}
 
 	@EventHandler
@@ -196,9 +201,9 @@ public class ValkyrienWarfareMod {
 	}
 
 	public void loadConfig() {
-		File file = new File(DimensionManager.getCurrentSaveRootDirectory(), "/valkyrienwarfaresettings.dat");
+		File file = new File(ValkyrienWarfareMod.getWorkingFolder(), "/valkyrienwarfaresettings.dat");
 
-		if (file.exists()) {
+		if (!file.exists()) {
 			tag = new DataTag(file);
 			tag.setBoolean("doGravity", true);
 			tag.setBoolean("doPhysicsBlocks", true);
@@ -217,16 +222,16 @@ public class ValkyrienWarfareMod {
 			tag = new DataTag(file);
 		}
 
-		PhysicsSettings.doGravity = tag.getBoolean("doGravity");
-		PhysicsSettings.doPhysicsBlocks = tag.getBoolean("doPhysicsBlocks");
-		PhysicsSettings.doBalloons = tag.getBoolean("doBalloons");
-		PhysicsSettings.doAirshipRotation = tag.getBoolean("doAirshipRotation");
-		PhysicsSettings.doAirshipMovement = tag.getBoolean("doAirshipMovement");
-		ValkyrienWarfareMod.doSplitting = tag.getBoolean("doSplitting");
-		ValkyrienWarfareMod.maxShipSize = tag.getInteger("maxShipSize");
-		ValkyrienWarfareMod.physIter = tag.getInteger("physicsIterations");
-		ValkyrienWarfareMod.physSpeed = tag.getDouble("physicsSpeed");
-		ValkyrienWarfareMod.gravity = new Vector(tag.getDouble("gravityVecX"), tag.getDouble("gravityVecY"), tag.getDouble("gravityVecZ"));
+		PhysicsSettings.doGravity = tag.getBoolean("doGravity", true);
+		PhysicsSettings.doPhysicsBlocks = tag.getBoolean("doPhysicsBlocks", true);
+		PhysicsSettings.doBalloons = tag.getBoolean("doBalloons", true);
+		PhysicsSettings.doAirshipRotation = tag.getBoolean("doAirshipRotation", true);
+		PhysicsSettings.doAirshipMovement = tag.getBoolean("doAirshipMovement", true);
+		ValkyrienWarfareMod.doSplitting = tag.getBoolean("doSplitting", false);
+		ValkyrienWarfareMod.maxShipSize = tag.getInteger("maxShipSize", 15000);
+		ValkyrienWarfareMod.physIter = tag.getInteger("physicsIterations", 10);
+		ValkyrienWarfareMod.physSpeed = tag.getDouble("physicsSpeed", 0.05);
+		ValkyrienWarfareMod.gravity = new Vector(tag.getDouble("gravityVecX", 0.0), tag.getDouble("gravityVecY", -9.8), tag.getDouble("gravityVecZ", 0.0));
 	}
 
 	public void saveConfig() {
@@ -243,5 +248,20 @@ public class ValkyrienWarfareMod {
 		tag.setInteger("physicsIterations", ValkyrienWarfareMod.physIter);
 		tag.setDouble("physicsSpeed", ValkyrienWarfareMod.physSpeed);
 		tag.save();
+	}
+	
+	public static File getWorkingFolder() {
+		File toBeReturned;
+		try {
+			if (FMLCommonHandler.instance().getSide().isClient()) {
+				toBeReturned = Minecraft.getMinecraft().mcDataDir;
+			} else {
+				toBeReturned = FMLCommonHandler.instance().getMinecraftServerInstance().getFile("");
+			}
+			return toBeReturned;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

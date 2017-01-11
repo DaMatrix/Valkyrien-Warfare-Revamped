@@ -37,6 +37,7 @@ public class ClientProxy extends CommonProxy {
 		MinecraftForge.EVENT_BUS.register(eventsClient);
 		MinecraftForge.EVENT_BUS.register(keyEvents);
 		registerBlockItem(ValkyrienWarfareMod.physicsInfuser);
+		registerBlockItem(ValkyrienWarfareMod.physicsInfuserCreative);
 	}
 
 	@Override
@@ -47,12 +48,6 @@ public class ClientProxy extends CommonProxy {
 	private void registerBlockItem(Block toRegister) {
 		Item item = Item.getItemFromBlock(toRegister);
 		Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation(ValkyrienWarfareMod.MODID + ":" + item.getUnlocalizedName().substring(5), "inventory"));
-	}
-
-	private void registerItemModel(Item toRegister) {
-		RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
-
-		renderItem.getItemModelMesher().register(toRegister, 0, new ModelResourceLocation(ValkyrienWarfareMod.MODID + ":" + toRegister.getUnlocalizedName(), "inventory"));
 	}
 
 	@Override
