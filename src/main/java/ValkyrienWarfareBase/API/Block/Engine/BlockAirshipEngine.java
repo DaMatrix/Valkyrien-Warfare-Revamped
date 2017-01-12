@@ -1,4 +1,4 @@
-package ValkyrienWarfareControl.Block;
+package ValkyrienWarfareBase.API.Block.Engine;
 
 import ValkyrienWarfareBase.API.IBlockForceProvider;
 import ValkyrienWarfareBase.API.Vector;
@@ -19,19 +19,20 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 /**
- * All normal engines should use this class, that way other kinds of engines can be made without making tons of new classes for them. Only engines that add new functionality should have their own class.
+ * All engines should extend this class, that way other kinds of engines can be made without making tons of new classes for them. Only engines that add new functionality should have their own class.
  */
-public class BlockNormalEngine extends Block implements IBlockForceProvider {
+public abstract class BlockAirshipEngine extends Block implements IBlockForceProvider {
 
 	public double enginePower = 4000D;
 
 	public static final PropertyDirection FACING = PropertyDirection.create("facing");
 
-	public BlockNormalEngine(Material materialIn, double enginePower) {
+	public BlockAirshipEngine(Material materialIn, double enginePower) {
 		super(materialIn);
 		this.enginePower = enginePower;
 	}
 
+	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		EnumFacing facing = BlockPistonBase.getFacingFromEntity(pos, placer);
 		if (placer.isSneaking()) {
@@ -125,4 +126,5 @@ public class BlockNormalEngine extends Block implements IBlockForceProvider {
 	public double getEnginePower(World world, BlockPos pos, IBlockState state, Entity shipEntity) {
 		return this.enginePower;
 	}
+
 }
