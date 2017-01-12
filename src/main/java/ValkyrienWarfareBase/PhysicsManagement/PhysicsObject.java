@@ -10,6 +10,7 @@ import java.util.Set;
 
 import ValkyrienWarfareBase.NBTUtils;
 import ValkyrienWarfareBase.ValkyrienWarfareMod;
+import ValkyrienWarfareBase.API.EnumChangeOwnerResult;
 import ValkyrienWarfareBase.API.RotationMatrices;
 import ValkyrienWarfareBase.API.Vector;
 import ValkyrienWarfareBase.ChunkManagement.ChunkSet;
@@ -79,7 +80,7 @@ public class PhysicsObject {
 	public boolean doPhysics = true;
 	public boolean fromSplit = false;
 
-	//The closest Chunks to the Ship cached in here
+	// The closest Chunks to the Ship cached in here
 	public ChunkCache surroundingWorldChunksCache;
 	public EntityPlayer creator;
 
@@ -97,7 +98,7 @@ public class PhysicsObject {
 	// Used for faster memory access to the Chunks this object 'owns'
 	public Chunk[][] claimedChunks;
 	public VWChunkCache VKChunkCache;
-	//Some badly written mods use these Maps to determine who to send packets to, so we need to manually fill them with nearby players
+	// Some badly written mods use these Maps to determine who to send packets to, so we need to manually fill them with nearby players
 	public PlayerChunkMapEntry[][] claimedChunksEntries;
 
 	public ShipBalloonManager balloonManager;
@@ -105,7 +106,7 @@ public class PhysicsObject {
 	public HashMap<Integer, Vector> entityLocalPositions = new HashMap<Integer, Vector>();
 
 	public ShipPilotingController pilotingController;
-	
+
 	public PhysicsObject(PhysicsWrapperEntity host) {
 		wrapper = host;
 		worldObj = host.worldObj;
@@ -153,6 +154,13 @@ public class PhysicsObject {
 		}
 
 		if (blockPositions.size() == 0) {
+			if (!worldObj.isRemote)	{
+				if (creator != null)
+					creator.getCapability(ValkyrienWarfareMod.airshipCounter, null).onLose();
+				
+				ValkyrienWarfareMod.chunkManager.getManagerForWorld(worldObj).data.avalibleChunkKeys.add(ownedChunks.centerX);
+			}
+			
 			destroy();
 		}
 
@@ -828,6 +836,29 @@ public class PhysicsObject {
 		NBTTagCompound entityFixedPositionNBT = new NBTTagCompound();
 		NBTUtils.writeEntityPositionHashMapToNBT("entityFixedPosMap", entityLocalPositions, entityFixedPositionNBT);
 		modifiedBuffer.writeNBTTagCompoundToBuffer(entityFixedPositionNBT);
+	}
+
+	/**
+	 * Tries to change the owner of this PhysicsObject.
+	 * 
+	 * @param newOwner
+	 * @return
+	 */
+	public EnumChangeOwnerResult changeOwner(EntityPlayer newOwner) {
+		if (!ValkyrienWarfareMod.canChangeAirshipCounter(true, newOwner)) {
+			return EnumChangeOwnerResult.ERROR_NEWOWNER_NOT_ENOUGH;
+		}
+
+		if (ValkyrienWarfareMod.canChangeAirshipCounter(false, creator)) {
+			return EnumChangeOwnerResult.ERROR_IMPOSSIBLE_STATUS;
+		}
+		if (creator != null)
+			creator.getCapability(ValkyrienWarfareMod.airshipCounter, null).onLose();
+		
+		newOwner.getCapability(ValkyrienWarfareMod.airshipCounter, null).onCreate();
+
+		creator = newOwner;
+		return EnumChangeOwnerResult.SUCCESS;
 	}
 
 }

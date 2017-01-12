@@ -1,5 +1,6 @@
 package ValkyrienWarfareBase;
 
+import ValkyrienWarfareBase.Capability.IAirshipCounterCapability;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,12 +22,21 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
@@ -46,6 +56,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 
 public class EventsCommon {
+	
+	protected double lastPosX = 0, lastPosZ = 0;
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onEntityInteractEvent(EntityInteract event) {
@@ -71,10 +83,18 @@ public class EventsCommon {
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onPlayerTickEvent(PlayerTickEvent event) {
 		if (!event.player.worldObj.isRemote) {
-			EntityPlayerMP player = (EntityPlayerMP) event.player;
-			if (!(player.connection instanceof CustomNetHandlerPlayServer)) {
-				player.connection = new CustomNetHandlerPlayServer(player.connection);
+			EntityPlayerMP p = (EntityPlayerMP) event.player;
+			if (!(p.connection instanceof CustomNetHandlerPlayServer)) {
+				p.connection = new CustomNetHandlerPlayServer(p.connection);
 			}
+			if (lastPosX != p.posX || lastPosZ != p.posZ)	{ //Player has moved
+				if (Math.abs(p.posX) > 27000000 || Math.abs(p.posZ) > 27000000)	{ //Player is outside of world border, tp them back
+					p.attemptTeleport(lastPosX, p.lastTickPosY, lastPosZ);
+					p.addChatMessage(new TextComponentString("You can't go beyond 27000000 blocks because airships are stored there!"));
+				}
+			}
+			lastPosX = p.posX;
+			lastPosZ = p.posZ;
 		}
 	}
 
@@ -316,6 +336,33 @@ public class EventsCommon {
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onHarvestCheck(HarvestCheck event) {
 
+	}
+
+	@SubscribeEvent
+	public void onEntityConstruct(AttachCapabilitiesEvent evt) {
+		evt.addCapability(new ResourceLocation(ValkyrienWarfareMod.MODID, "IAirshipCounter"), new ICapabilitySerializable<NBTPrimitive>() {
+			IAirshipCounterCapability inst = ValkyrienWarfareMod.airshipCounter.getDefaultInstance();
+
+			@Override
+			public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+				return capability == ValkyrienWarfareMod.airshipCounter;
+			}
+
+			@Override
+			public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+				return capability == ValkyrienWarfareMod.airshipCounter ? ValkyrienWarfareMod.airshipCounter.<T>cast(inst) : null;
+			}
+
+			@Override
+			public NBTPrimitive serializeNBT() {
+				return (NBTPrimitive) ValkyrienWarfareMod.airshipCounter.getStorage().writeNBT(ValkyrienWarfareMod.airshipCounter, inst, null);
+			}
+
+			@Override
+			public void deserializeNBT(NBTPrimitive nbt) {
+				ValkyrienWarfareMod.airshipCounter.getStorage().readNBT(ValkyrienWarfareMod.airshipCounter, inst, null, nbt);
+			}
+		});
 	}
 
 }
