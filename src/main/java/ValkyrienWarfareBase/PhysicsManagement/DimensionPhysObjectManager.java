@@ -36,12 +36,17 @@ public class DimensionPhysObjectManager {
 	}
 
 	public WorldPhysObjectManager getManagerForWorld(World world) {
+		if(world == null){
+			//I'm not quite sure what to do here
+		}
 		if (cachedManager == null || cachedManager.worldObj != world) {
 			cachedManager = managerPerWorld.get(world);
 		}
 		if (cachedManager == null) {
 			System.err.println("getManagerForWorld just requested for a World without one!!! Assuming that this is a new world, so making a new WorldPhysObjectManager for it.");
 			cachedManager = new WorldPhysObjectManager(world);
+			//Make sure to add the cachedManager to the world managers
+			managerPerWorld.put(world, cachedManager);
 		}
 		return cachedManager;
 	}
@@ -78,6 +83,9 @@ public class DimensionPhysObjectManager {
 	}
 
 	public PhysicsWrapperEntity getObjectManagingPos(World world, BlockPos pos) {
+		if(world == null || pos == null){
+			return null;
+		}
 		Chunk chunk = world.getChunkFromBlockCoords(pos);
 		return getObjectManagingChunk(chunk);
 	}

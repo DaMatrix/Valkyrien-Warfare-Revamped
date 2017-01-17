@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 import ValkyrienWarfareBase.API.RotationMatrices;
 import ValkyrienWarfareBase.API.Vector;
@@ -62,7 +63,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 
 public class EventsCommon {
 
-	public HashMap<EntityPlayerMP, Double[]> lastPositions = new HashMap<EntityPlayerMP, Double[]>();
+	public static HashMap<EntityPlayerMP, Double[]> lastPositions = new HashMap<EntityPlayerMP, Double[]>();
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onEntityInteractEvent(EntityInteract event) {
@@ -87,18 +88,27 @@ public class EventsCommon {
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onPlayerTickEvent(PlayerTickEvent event) {
-		if (!event.player.worldObj.isRemote) {
+		if (!event.player.worldObj.isRemote && event.player != null) {
 			EntityPlayerMP p = (EntityPlayerMP) event.player;
-			if (!(p.connection instanceof CustomNetHandlerPlayServer)) {
-				p.connection = new CustomNetHandlerPlayServer(p.connection);
+			
+			try{
+				if (!(p.connection instanceof CustomNetHandlerPlayServer)) {
+					p.connection = new CustomNetHandlerPlayServer(p.connection);
+				}
+			}catch(Exception e){
+				e.printStackTrace();
 			}
 
 			Double[] pos = lastPositions.get(p);
+			try {
 			if (pos[0] != p.posX || pos[2] != p.posZ) { // Player has moved
 				if (Math.abs(p.posX) > 27000000 || Math.abs(p.posZ) > 27000000) { // Player is outside of world border, tp them back
 					p.attemptTeleport(pos[0], pos[1], pos[2]);
 					p.addChatMessage(new TextComponentString("You can't go beyond 27000000 blocks because airships are stored there!"));
 				}
+			}
+			} catch (NullPointerException e)	{
+				ValkyrienWarfareMod.VWLogger.log(Level.WARNING, "Nullpointer EventsCommon.java:onPlayerTickEvent");
 			}
 
 			pos[0] = p.posX;
@@ -392,7 +402,7 @@ public class EventsCommon {
 			PhysicsWrapperEntity physObj = ValkyrienWarfareMod.physicsManager.getObjectManagingPos(event.getWorld(), event.getPos());
 			if (physObj != null)	{
 				if (!(physObj.wrapping.creator.equals(event.getEntityPlayer().entityUniqueID.toString()) || physObj.wrapping.allowedUsers.contains(event.getEntityPlayer().entityUniqueID.toString())))	{
-					event.getEntityPlayer().addChatMessage(new TextComponentString("You need to be added to the airship to do that!"));
+					event.getEntityPlayer().addChatMessage(new TextComponentString("You need to be added to the airship to do that!" + (physObj.wrapping.creator == null || physObj.wrapping.creator.trim().isEmpty() ? " Try using \"/airshipSettings claim\"!" : "")));
 					event.setCanceled(true);
 					return;
 				}
@@ -406,7 +416,7 @@ public class EventsCommon {
 			PhysicsWrapperEntity physObj = ValkyrienWarfareMod.physicsManager.getObjectManagingPos(event.getWorld(), event.getPos());
 			if (physObj != null)	{
 				if (!(physObj.wrapping.creator.equals(event.getPlayer().entityUniqueID.toString()) || physObj.wrapping.allowedUsers.contains(event.getPlayer().entityUniqueID.toString())))	{
-					event.getPlayer().addChatMessage(new TextComponentString("You need to be added to the airship to do that!"));
+					event.getPlayer().addChatMessage(new TextComponentString("You need to be added to the airship to do that!" + (physObj.wrapping.creator == null || physObj.wrapping.creator.trim().isEmpty() ? " Try using \"/airshipSettings claim\"!" : "")));
 					event.setCanceled(true);
 					return;
 				}

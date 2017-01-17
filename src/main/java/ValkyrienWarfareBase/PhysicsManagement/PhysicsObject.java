@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import ValkyrienWarfareBase.NBTUtils;
 import ValkyrienWarfareBase.ValkyrienWarfareMod;
@@ -60,6 +61,7 @@ import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class PhysicsObject {
 
@@ -77,7 +79,7 @@ public class PhysicsObject {
 	public PhysObjectRenderManager renderer;
 	public PhysicsCalculations physicsProcessor;
 	public ArrayList<BlockPos> blockPositions = new ArrayList<BlockPos>();
-	public AxisAlignedBB collisionBB = new AxisAlignedBB(0, 0, 0, 0, 0, 0);
+	public AxisAlignedBB collisionBB = PhysicsWrapperEntity.ZERO_AABB;
 
 	public ArrayList<PhysicsQueuedForce> queuedPhysForces = new ArrayList<PhysicsQueuedForce>();
 	public ArrayList<BlockPos> explodedPositionsThisTick = new ArrayList<BlockPos>();
@@ -161,18 +163,24 @@ public class PhysicsObject {
 
 		if (blockPositions.size() == 0) {
 			if (!worldObj.isRemote) {
-				if (creator != null)
-					try {
-						File f = new File(DimensionManager.getCurrentSaveRootDirectory(), "playerdata/" + creator + ".dat");
-						NBTTagCompound tag = CompressedStreamTools.read(f);
-						NBTTagCompound capsTag = tag.getCompoundTag("ForgeCaps");
-						capsTag.setInteger("valkyrienwarfare:IAirshipCounter", capsTag.getInteger("valkyrienwarfare:IAirshipCounter") - 1);
-						CompressedStreamTools.safeWrite(tag, f);
-					} catch (IOException e) {
-						e.printStackTrace();
+				if (creator != null) {
+					EntityPlayer player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(UUID.fromString(creator));
+					if (player != null) {
+						player.getCapability(ValkyrienWarfareMod.airshipCounter, null).onLose();
+					} else {
+						try {
+							File f = new File(DimensionManager.getCurrentSaveRootDirectory(), "playerdata/" + creator + ".dat");
+							NBTTagCompound tag = CompressedStreamTools.read(f);
+							NBTTagCompound capsTag = tag.getCompoundTag("ForgeCaps");
+							capsTag.setInteger("valkyrienwarfare:IAirshipCounter", capsTag.getInteger("valkyrienwarfare:IAirshipCounter") - 1);
+							CompressedStreamTools.safeWrite(tag, f);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
 
-				ValkyrienWarfareMod.chunkManager.getManagerForWorld(worldObj).data.avalibleChunkKeys.add(ownedChunks.centerX);
+					ValkyrienWarfareMod.chunkManager.getManagerForWorld(worldObj).data.avalibleChunkKeys.add(ownedChunks.centerX);
+				}
 			}
 
 			destroy();
@@ -791,7 +799,7 @@ public class PhysicsObject {
 		for (String s : toAllow) {
 			allowedUsers.add(s);
 		}
-		
+
 		creator = compound.getString("owner");
 	}
 
@@ -877,15 +885,34 @@ public class PhysicsObject {
 		if (!ValkyrienWarfareMod.canChangeAirshipCounter(true, newOwner)) {
 			return EnumChangeOwnerResult.ERROR_NEWOWNER_NOT_ENOUGH;
 		}
+		
+		if (newOwner.entityUniqueID.toString().equals(creator))	{
+			return EnumChangeOwnerResult.ALREADY_CLAIMED;
+		}
 
+		EntityPlayer player = null;
 		try {
-			File f = new File(DimensionManager.getCurrentSaveRootDirectory(), "playerdata/" + creator + ".dat");
-			NBTTagCompound tag = CompressedStreamTools.read(f);
-			NBTTagCompound capsTag = tag.getCompoundTag("ForgeCaps");
-			capsTag.setInteger("valkyrienwarfare:IAirshipCounter", capsTag.getInteger("valkyrienwarfare:IAirshipCounter") - 1);
-			CompressedStreamTools.safeWrite(tag, f);
-		} catch (IOException e) {
-			e.printStackTrace();
+			player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(UUID.fromString(creator));
+		} catch (NullPointerException e)	{
+			newOwner.addChatMessage(new TextComponentString("That airship doesn't have an owner, you get to have it :D"));
+			newOwner.getCapability(ValkyrienWarfareMod.airshipCounter, null).onCreate();
+			allowedUsers.clear();
+			creator = newOwner.entityUniqueID.toString();
+			return EnumChangeOwnerResult.SUCCESS;
+		}
+		
+		if (player != null) {
+			player.getCapability(ValkyrienWarfareMod.airshipCounter, null).onLose();
+		} else {
+			try {
+				File f = new File(DimensionManager.getCurrentSaveRootDirectory(), "playerdata/" + creator + ".dat");
+				NBTTagCompound tag = CompressedStreamTools.read(f);
+				NBTTagCompound capsTag = tag.getCompoundTag("ForgeCaps");
+				capsTag.setInteger("valkyrienwarfare:IAirshipCounter", capsTag.getInteger("valkyrienwarfare:IAirshipCounter") - 1);
+				CompressedStreamTools.safeWrite(tag, f);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 		newOwner.getCapability(ValkyrienWarfareMod.airshipCounter, null).onCreate();
