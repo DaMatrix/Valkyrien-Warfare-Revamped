@@ -3,7 +3,7 @@
   "modid": "valkyrienwarfare",
   "name": "Valkyrien Warfare",
   "description": "Rule The Skies!",
-  "version": "0.86d",
+  "version": "0.87",
   "mcversion": "1.10.2",
   "url": "https://goo.gl/M2W0N5",
   "updateUrl": "https://raw.githubusercontent.com/BigBastard/Valkyrien-Warfare-Revamped/update.json",
@@ -42,5 +42,19 @@
   "parent": "valkyrienwarfare",
   "screenshots": [],
   "dependencies": ["valkyrienwarfare"]
+},
+{
+  "modid": "examplemod",
+  "name": "Example Mod",
+  "description": "Example placeholder mod.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["ExampleDude"],
+  "credits": "The Forge and FML guys, for making this example",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
 }
 ]

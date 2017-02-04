@@ -303,9 +303,9 @@ public class PhysicsCalculations {
 
 		convertTorqueToVelocity();
 	}
-	
+
 	public void calculateForcesArchimedes() {
-		double modifiedDrag = Math.pow(drag, physTickSpeed*5 / .05D);
+		double modifiedDrag = Math.pow(drag, physTickSpeed / .05D);
 		linearMomentum.multiply(modifiedDrag);
 		angularVelocity.multiply(modifiedDrag);
 	}
@@ -370,10 +370,10 @@ public class PhysicsCalculations {
 			wrapperEnt.roll = (float) Math.toDegrees(radians[2]);
 			coordTrans.updateAllTransforms();
 		} else {
-			// wrapperEnt.isDead=true;
+			 wrapperEnt.isDead=true;
 			wrapperEnt.wrapping.doPhysics = false;
-			linearMomentum = new Vector();
-			angularVelocity = new Vector();
+//			linearMomentum = new Vector();
+//			angularVelocity = new Vector();
 			System.out.println(angularVelocity);
 			System.out.println("Rotational Error?");
 		}

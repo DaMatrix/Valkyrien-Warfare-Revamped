@@ -2,7 +2,6 @@ package ValkyrienWarfareControl.Piloting;
 
 import java.util.UUID;
 
-
 import ValkyrienWarfareBase.NBTUtils;
 import ValkyrienWarfareBase.ValkyrienWarfareMod;
 import ValkyrienWarfareBase.API.RotationMatrices;
@@ -12,12 +11,10 @@ import ValkyrienWarfareBase.PhysicsManagement.PhysicsWrapperEntity;
 import ValkyrienWarfareBase.PhysicsManagement.WorldPhysObjectManager;
 import ValkyrienWarfareControl.ValkyrienWarfareControlMod;
 import ValkyrienWarfareControl.Block.BlockShipPilotsChair;
-import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -57,7 +54,14 @@ public class ShipPilotingController {
 		//These vectors can be re-arranged depending on the direction the chair was placed
 		
 		IBlockState state = controlledShip.worldObj.getBlockState(chairPosition);
-		double[] pilotRotationMatrix = getRotationMatrixFromBlockState(state, chairPosition);
+//		double[] pilotRotationMatrix = getRotationMatrixFromBlockState(state, chairPosition);
+		
+		
+		double pilotPitch = 0D;
+		double pilotYaw = ((BlockShipPilotsChair)state.getBlock()).getChairYaw(state, chairPosition);
+		double pilotRoll = 0D;
+		
+		double[] pilotRotationMatrix = RotationMatrices.getRotationMatrix(pilotPitch, pilotYaw, pilotRoll);
 		
 		Vector playerDirection = new Vector(1,0,0);
 		
@@ -114,9 +118,29 @@ public class ShipPilotingController {
 		
 		double mass = controlledShip.physicsProcessor.mass;
 		
-		idealAngularDirection.multiply(mass/2.5D);
+//		idealAngularDirection.multiply(mass/2.5D);
 		idealLinearVelocity.multiply(mass/5D);
-		shipUpOffset.multiply(mass/2.5D);
+//		shipUpOffset.multiply(mass/2.5D);
+		
+		
+		idealAngularDirection.multiply(1D/6D);
+		shipUpOffset.multiply(1D/3D);
+		
+		Vector velocityCompenstationLinear = controlledShip.physicsProcessor.linearMomentum;
+		
+		Vector velocityCompensationAngular = controlledShip.physicsProcessor.angularVelocity.cross(playerDirection);
+		
+		Vector velocityCompensationAlignment = controlledShip.physicsProcessor.angularVelocity.cross(shipUpPos);
+		
+		velocityCompensationAlignment.multiply(controlledShip.physicsProcessor.physRawSpeed);
+		velocityCompensationAngular.multiply(2D*controlledShip.physicsProcessor.physRawSpeed);
+		
+		shipUpOffset.subtract(velocityCompensationAlignment);
+		velocityCompensationAngular.subtract(velocityCompensationAngular);
+		
+		RotationMatrices.applyTransform3by3(controlledShip.physicsProcessor.framedMOI, idealAngularDirection);
+		RotationMatrices.applyTransform3by3(controlledShip.physicsProcessor.framedMOI, shipUpOffset);
+		
 		
 		if(message.airshipSprinting){
 			idealLinearVelocity.multiply(2D);

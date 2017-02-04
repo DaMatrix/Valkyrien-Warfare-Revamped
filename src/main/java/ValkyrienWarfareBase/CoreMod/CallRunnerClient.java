@@ -1,6 +1,5 @@
 package ValkyrienWarfareBase.CoreMod;
 
-import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,8 +33,8 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.ViewFrustum;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.culling.ICamera;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
@@ -58,6 +57,12 @@ import net.minecraft.world.World;
 public class CallRunnerClient extends CallRunner {
 
 	public static void onOrientCamera(EntityRenderer renderer, float partialTicks) {
+		if(true){
+			renderer.orientCamera(partialTicks);
+			return;
+		}
+		
+		
 		Entity entity = renderer.mc.getRenderViewEntity();
 		float f = entity.getEyeHeight();
 		double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double) partialTicks;
@@ -418,8 +423,8 @@ public class CallRunnerClient extends CallRunner {
 		((ClientProxy) ValkyrienWarfareMod.proxy).lastCamera = camera;
 
 		GL11.glPushMatrix();
-		GlStateManager.disableAlpha();
-		GlStateManager.disableBlend();
+//		GlStateManager.disableAlpha();
+//		GlStateManager.disableBlend();
 		GlStateManager.enableLighting();
 		renderGlobal.mc.entityRenderer.enableLightmap();
 
@@ -429,15 +434,20 @@ public class CallRunnerClient extends CallRunner {
 		GL11.glPushMatrix();
 		for (PhysicsWrapperEntity wrapper : ValkyrienWarfareMod.physicsManager.getManagerForWorld(renderGlobal.theWorld).physicsEntities) {
 			// Vector centerOfRotation = wrapper.wrapping.centerCoord;
-			TileEntityRendererDispatcher.instance.staticPlayerX = wrapper.wrapping.renderer.offsetPos.getX();
-			TileEntityRendererDispatcher.instance.staticPlayerY = wrapper.wrapping.renderer.offsetPos.getY();
-			TileEntityRendererDispatcher.instance.staticPlayerZ = wrapper.wrapping.renderer.offsetPos.getZ();
-			GL11.glPushMatrix();
-			wrapper.wrapping.renderer.setupTranslation(partialTicks);
-			wrapper.wrapping.renderer.renderTileEntities(partialTicks);
-			wrapper.wrapping.renderer.renderEntities(partialTicks);
-			GL11.glPopMatrix();
+			if(wrapper != null && wrapper.wrapping != null && wrapper.wrapping.renderer != null){
+				if(wrapper.wrapping.renderer.offsetPos != null){
+					TileEntityRendererDispatcher.instance.staticPlayerX = wrapper.wrapping.renderer.offsetPos.getX();
+					TileEntityRendererDispatcher.instance.staticPlayerY = wrapper.wrapping.renderer.offsetPos.getY();
+					TileEntityRendererDispatcher.instance.staticPlayerZ = wrapper.wrapping.renderer.offsetPos.getZ();
+					GL11.glPushMatrix();
+					wrapper.wrapping.renderer.setupTranslation(partialTicks);
+					wrapper.wrapping.renderer.renderTileEntities(partialTicks);
+					wrapper.wrapping.renderer.renderEntities(partialTicks);
+					GL11.glPopMatrix();
+				}
+			}
 		}
+		
 		GL11.glPopMatrix();
 		TileEntityRendererDispatcher.instance.staticPlayerX = playerX;
 		TileEntityRendererDispatcher.instance.staticPlayerY = playerY;
@@ -446,6 +456,12 @@ public class CallRunnerClient extends CallRunner {
 
 		renderGlobal.renderEntities(renderViewEntity, camera, partialTicks);
 	}
+
+	public static void onDoRenderEntity(RenderManager manager, Entity entityIn, double x, double y, double z, float yaw, float partialTicks, boolean p_188391_10_){
+		if(!ValkyrienWarfareMod.physicsManager.isEntityFixed(entityIn)){
+			manager.doRenderEntity(entityIn, x, y, z, yaw, partialTicks, p_188391_10_);
+		}
+    }
 
 	public static boolean onInvalidateRegionAndSetBlock(WorldClient client, BlockPos pos, IBlockState state) {
 		int i = pos.getX();

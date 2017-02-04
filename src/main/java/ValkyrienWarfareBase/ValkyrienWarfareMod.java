@@ -29,12 +29,10 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -60,7 +58,7 @@ public class ValkyrienWarfareMod {
 
 	public static final String MODID = "valkyrienwarfare";
 	public static final String MODNAME = "Valkyrien Warfare";
-	public static final String MODVER = "0.86d";
+	public static final String MODVER = "0.87a";
 
 	public static File configFile;
 	public static Configuration config;
@@ -167,10 +165,10 @@ public class ValkyrienWarfareMod {
 		shipTickDelay = config.get(Configuration.CATEGORY_GENERAL, "Ticks Delay Between Client and Server", 1, "Tick delay between client and server physics; raise if physics look choppy").getInt() % 20;
 		maxMissedPackets = config.get(Configuration.CATEGORY_GENERAL, "Missed packets threshold", 1, "Higher values gaurantee virutally no choppyness, but also comes with a large delay. Only change if you have unstable internet").getInt();
 		// Property spawnParticlesParticle = config.get(Configuration.CATEGORY_GENERAL, "Ships spawn particles", false).getBoolean();
-		multiThreadedPhysics = config.get(Configuration.CATEGORY_GENERAL, "Multi-Threaded Physics", false, "Use Multi-Threaded Physics").getBoolean();
+		multiThreadedPhysics = config.get(Configuration.CATEGORY_GENERAL, "Multi-Threaded Physics", true, "Use Multi-Threaded Physics").getBoolean();
 		threadCount = config.get(Configuration.CATEGORY_GENERAL, "Physics Thread Count", (int) Math.max(1, Runtime.getRuntime().availableProcessors() - 2), "Number of threads to run physics on").getInt();
 
-		doShipCollision = config.get(Configuration.CATEGORY_GENERAL, "Enable Ship Collision", false).getBoolean();
+		doShipCollision = config.get(Configuration.CATEGORY_GENERAL, "Enable Ship Collision", true).getBoolean();
 
 		shipUpperLimit = config.get(Configuration.CATEGORY_GENERAL, "Ship Y-Height Maximum", 1000D).getDouble();
 		shipLowerLimit = config.get(Configuration.CATEGORY_GENERAL, "Ship Y-Height Minimum", -30D).getDouble();
@@ -224,7 +222,7 @@ public class ValkyrienWarfareMod {
 		PhysicsSettings.doAirshipMovement = tag.getBoolean("doAirshipMovement", true);
 		ValkyrienWarfareMod.doSplitting = tag.getBoolean("doSplitting", false);
 		ValkyrienWarfareMod.maxShipSize = tag.getInteger("maxShipSize", 15000);
-		ValkyrienWarfareMod.physIter = tag.getInteger("physicsIterations", 10);
+		ValkyrienWarfareMod.physIter = tag.getInteger("physicsIterations", 8);
 		ValkyrienWarfareMod.physSpeed = tag.getDouble("physicsSpeed", 0.05);
 		ValkyrienWarfareMod.gravity = new Vector(tag.getDouble("gravityVecX", 0.0), tag.getDouble("gravityVecY", -9.8), tag.getDouble("gravityVecZ", 0.0));
 	}

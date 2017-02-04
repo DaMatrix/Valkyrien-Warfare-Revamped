@@ -100,6 +100,10 @@ public class EventsCommon {
 			}
 
 			Double[] pos = lastPositions.get(p);
+			if(pos == null){
+				pos = new Double[3];
+				lastPositions.put(p, pos);
+			}
 			try {
 			if (pos[0] != p.posX || pos[2] != p.posZ) { // Player has moved
 				if (Math.abs(p.posX) > 27000000 || Math.abs(p.posZ) > 27000000) { // Player is outside of world border, tp them back
@@ -182,7 +186,7 @@ public class EventsCommon {
 		}
 	}
 
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	/**@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onExplosionDetonateEvent(ExplosionEvent.Detonate event) {
 		Explosion e = event.getExplosion();
 
@@ -290,7 +294,7 @@ public class EventsCommon {
 			e.getPlayerKnockbackMap().putAll(playerKnockbackMap);
 
 		}
-	}
+	}**/
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onWorldLoad(WorldEvent.Load event) {
