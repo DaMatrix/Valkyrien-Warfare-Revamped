@@ -31,7 +31,7 @@ public class TransformAdapter extends ClassVisitor {
 	private static final String GameProfileName = "com/mojang/authlib/GameProfile";
 	private static final String EntityPlayerMPName = "net/minecraft/entity/player/EntityPlayerMP";
 	private static final String ChunkName = "net/minecraft/world/chunk/Chunk";
-	private static final String RayTraceResult = "net/minecraft/util/math/RayTraceResult";
+	private static final String RayTraceResultName = "net/minecraft/util/math/RayTraceResult";
 	private static final String Vec3dName = "net/minecraft/util/math/Vec3d";
 	private static final String IBlockStateName = "net/minecraft/block/state/IBlockState";
 	private static final String BlockPosName = "net/minecraft/util/math/BlockPos";
@@ -49,7 +49,6 @@ public class TransformAdapter extends ClassVisitor {
 	private static final String ViewFrustumName = "net/minecraft/client/renderer/ViewFrustum";
 	private static final String EntityRendererName = "net/minecraft/client/renderer/EntityRenderer";
 	private static final String FrustumName = "net/minecraft/client/renderer/culling/Frustum";
-	private static final String RenderManagerName = "net/minecraft/client/renderer/entity/RenderManager";
 
 	private static final String IteratorName = "java/util/Iterator";
 	private static final String PredicateName = "com/google/common/base/Predicate";
@@ -62,8 +61,18 @@ public class TransformAdapter extends ClassVisitor {
 	}
 
 	public boolean runTransformer(String calledName, String calledDesc, String calledOwner, MethodVisitor mv) {
-		if (isMethod(calledDesc, "(L"+EntityClassName+";DDDFFZ)V", calledName, RenderManagerName, "doRenderEntity", "func_188391_a", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onDoRenderEntity", String.format("(L%s;L"+EntityClassName+";DDDFFZ)V", RenderManagerName));
+		if (isMethod(calledDesc, "(F)L" + Vec3dName + ";", calledName, EntityClassName, "getPositionEyes", "func_174824_e", calledOwner)) {
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onGetPositionEyes", String.format("(L%s;F)L"+Vec3dName+";", EntityClassName));
+			return false;
+		}
+		
+		if (isMethod(calledDesc, "(F)L" + Vec3dName + ";", calledName, EntityClassName, "getLook", "func_70676_i", calledOwner)) {
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathCommon, "onGetLook", String.format("(L%s;F)L"+Vec3dName+";", EntityClassName));
+			return false;
+		}
+		
+		if (isMethod(calledDesc, "(DF)L" + RayTraceResultName + ";", calledName, EntityClassName, "rayTrace", "func_174822_a", calledOwner)) {
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onRayTrace", String.format("(L%s;DF)L"+RayTraceResultName+";", EntityClassName));
 			return false;
 		}
 		
@@ -89,11 +98,6 @@ public class TransformAdapter extends ClassVisitor {
 
 		if (isMethod(calledDesc, "(IIIIIIZ)V", calledName, ViewFrustumName, "markBlocksForUpdate", "func_187474_a", calledOwner)) {
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onMarkBlocksForUpdate", String.format("(L%s;IIIIIIZ)V", ViewFrustumName));
-			return false;
-		}
-
-		if (isMethod(calledDesc, "(L" + BlockPosName + ";L" + IBlockStateName + ";L" + IBlockStateName + ";I)V", calledName, WorldClassName, "notifyBlockUpdate", "func_184138_a", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onNotifyBlockUpdate", String.format("(L%s;L" + BlockPosName + ";L" + IBlockStateName + ";L" + IBlockStateName + ";I)V", WorldClassName));
 			return false;
 		}
 
@@ -142,15 +146,6 @@ public class TransformAdapter extends ClassVisitor {
 			return false;
 		}
 
-		/*
-		 * if(isMethod(calledDesc,"(L"+EntityPlayerName+";DDDL"+SoundEventName+";L"+SoundCategoryName+";FF)V",calledName,WorldClassName,"playSound","func_184148_a",calledOwner)){ mv.visitMethodInsn( Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathCommon, "onPlaySound2", String.format( "(L%s;L"+EntityPlayerName+";DDDL"+SoundEventName+";L"+SoundCategoryName+";FF)V", WorldClassName) ); return false; }
-		 */
-
-		if (isMethod(calledDesc, "(L" + EntityPlayerName + ";L" + BlockPosName + ";L" + SoundEventName + ";L" + SoundCategoryName + ";FF)V", calledName, WorldClassName, "playSound", "func_184133_a", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathCommon, "onPlaySound1", String.format("(L%s;L" + EntityPlayerName + ";L" + BlockPosName + ";L" + SoundEventName + ";L" + SoundCategoryName + ";FF)V", WorldClassName));
-			return false;
-		}
-
 		if (isMethod(calledDesc, "(L" + ParticleName + ";)V", calledName, ParticleManagerName, "addEffect", "func_78873_a", calledOwner)) {
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onAddEffect", String.format("(L%s;L" + ParticleName + ";)V", ParticleManagerName));
 			return false;
@@ -166,8 +161,8 @@ public class TransformAdapter extends ClassVisitor {
 			return false;
 		}
 
-		if (isMethod(calledDesc, "(L" + EntityPlayerName + ";L" + RayTraceResult + ";IF)V", calledName, RenderGlobalName, "drawSelectionBox", "func_72731_b", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onDrawSelectionBox", String.format("(L%s;L" + EntityPlayerName + ";L" + RayTraceResult + ";IF)V", RenderGlobalName));
+		if (isMethod(calledDesc, "(L" + EntityPlayerName + ";L" + RayTraceResultName + ";IF)V", calledName, RenderGlobalName, "drawSelectionBox", "func_72731_b", calledOwner)) {
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onDrawSelectionBox", String.format("(L%s;L" + EntityPlayerName + ";L" + RayTraceResultName + ";IF)V", RenderGlobalName));
 			return false;
 		}
 
@@ -201,23 +196,8 @@ public class TransformAdapter extends ClassVisitor {
 			return false;
 		}
 
-		if (isMethod(calledDesc, "(IIIIII)V", calledName, WorldClassName, "markBlockRangeForRenderUpdate", "func_147458_c", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathClient, "onMarkBlockRangeForRenderUpdate", String.format("(L%s;IIIIII)V", WorldClassName));
-			return false;
-		}
-
-		if (isMethod(calledDesc, "(L" + Vec3dName + ";L" + Vec3dName + ";ZZZ)L" + RayTraceResult + ";", calledName, WorldClassName, "rayTraceBlocks", "func_147447_a", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathCommon, "onRayTraceBlocks", String.format("(L%s;L" + Vec3dName + ";L" + Vec3dName + ";ZZZ)L" + RayTraceResult + ";", WorldClassName));
-			return false;
-		}
-
-		if (isMethod(calledDesc, "(L" + GameProfileName + ";)L", calledName, EntityPlayerMPName, "createPlayerForUser", "func_148545_a", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathCommon, "onCreatePlayerForUser", String.format("(L%s;L" + GameProfileName + ";)L" + EntityPlayerMPName + ";", PlayerListName));
-			return false;
-		}
-
-		if (isMethod(calledDesc, "(L" + EntityPlayerMPName + ";IZ)L" + EntityPlayerMPName + ";", calledName, PlayerListName, "recreatePlayerEntity", "func_72368_a", calledOwner)) {
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathCommon, "onRecreatePlayerEntity", String.format("(L%s;L" + EntityPlayerMPName + ";IZ)L" + EntityPlayerMPName + ";", PlayerListName));
+		if (isMethod(calledDesc, "(L" + Vec3dName + ";L" + Vec3dName + ";ZZZ)L" + RayTraceResultName + ";", calledName, WorldClassName, "rayTraceBlocks", "func_147447_a", calledOwner)) {
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, ValkyrienWarfarePlugin.PathCommon, "onRayTraceBlocks", String.format("(L%s;L" + Vec3dName + ";L" + Vec3dName + ";ZZZ)L" + RayTraceResultName + ";", WorldClassName));
 			return false;
 		}
 
